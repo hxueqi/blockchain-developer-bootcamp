@@ -7,11 +7,16 @@ const tokens = (n) => {
 
 describe("Token", function () {
     let token;
+    let accounts;
+    let deployer;
 
     this.beforeEach(async function () {
         //Fetch Token from Blockchain
         const Token = await ethers.getContractFactory("Token");
         token = await Token.deploy('Barcelona Beach', 'BCB', '1000000');
+       
+        accounts = await ethers.getSigners();
+        deployer = accounts[0];
     });
 
     describe("Deployment", function () {
@@ -34,6 +39,10 @@ describe("Token", function () {
         
           it("has correct total supply", async function () {
             expect(await token.totalSupply()).to.equal(totalSupply);
+          });
+
+          it("assigns correct total supply to deployer", async function () {
+            expect(await token.balanceOf(deployer.address)).to.equal(totalSupply);
           });
     })
  
