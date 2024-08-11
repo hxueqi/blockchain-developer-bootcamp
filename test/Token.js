@@ -122,4 +122,48 @@ describe("Token", function () {
             });
         })
     })
+
+    describe('Delegated Token Transfer', function () {
+        let amount,transaction,result;
+
+        beforeEach(async function () {
+            amount = tokens('100');
+            await token.connect(deployer).approve(exchange.address, amount);
+        })
+
+        describe("Success", function () {
+            beforeEach(async function () {
+                transaction = await token.connect(exchange).transferFrom(deployer.address, receiver.address, amount);
+                result = await transaction.wait();
+            })
+
+            it("Transfers token balance", async function () {
+                expect(await token.balanceOf(deployer.address)).to.equal(ethers.utils.parseUnits('999900', 'ether'));
+                expect(await token.balanceOf(receiver.address)).to.equal(amount);
+            });
+    
+            it("Resets the allowance", async function () {
+                expect(await token.allowance(deployer.address, exchange.address)).to.be.equal(0);
+
+            });
+    
+            it("Emits Transfer event", async function () {
+                const event = result.events[0];
+                expect(event.event).to.equal("Transfer");
+    
+                const args = event.args;
+                expect(args.from).to.equal(deployer.address);
+                expect(args.to).to.equal(receiver.address);
+                expect(args.value).to.equal(amount);
+            });
+    
+        })
+
+        describe('Failure',async function () {
+                const invalidAmount = tokens(100000000); 
+                await expect(
+                    token.connect(exchange).transferFrom(deployer.address,receiver.address, invalidAmount).to.be.reverted
+                )
+        })
+    })
 })
